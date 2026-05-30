@@ -21,7 +21,7 @@ Lagent is a high-performance **Model Context Protocol (MCP)** server designed fo
 ```bash
 docker-compose up --build
 ```
-The MCP server will be accessible at: `http://localhost:9001/sse`
+The MCP server will be accessible at: `http://localhost:9001` (ASGI/Uvicorn)
 
 ### 2. Run Locally
 **Install dependencies:**
@@ -29,9 +29,13 @@ The MCP server will be accessible at: `http://localhost:9001/sse`
 pip install -r requirements.txt
 ```
 
-**Start the server:**
+**Start the server (via Uvicorn):**
 ```bash
-python main.py
+uvicorn server:app --host 0.0.0.0 --port 9001
+```
+Or simply:
+```bash
+python server.py
 ```
 By default, this runs on `http://0.0.0.0:9001`.
 
@@ -55,5 +59,5 @@ Connect your MCP client (like Claude Desktop) to the SSE endpoint:
 
 ## Development
 
-- `main.py`: Entry point that launches the FastMCP server.
+- `server.py`: Entry point that exposes the FastMCP server as an ASGI application.
 - `tools.py`: Contains the tool registrations and system logic.
