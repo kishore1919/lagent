@@ -1,24 +1,39 @@
-# Use a slim Python image
+# --- Build Stage ---
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# --- Final Stage ---
 FROM python:3.11-slim
 
-# Install system dependencies needed for the tools
+WORKDIR /app
+
+# Install runtime system tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     iproute2 \
     procps \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
+# Copy installed dependencies from builder
+COPY --from=builder /install /usr/local
 
-# Copy requirements and install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of the application
+# Copy application code
 COPY . .
 
-# Expose ports for Agent API and MCP Server
-EXPOSE 9000 9001
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-# Default command (can be overridden in docker-compose)
+# Expose port
+EXPOSE 9001
+
 CMD ["python", "main.py"]

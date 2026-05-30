@@ -1,84 +1,46 @@
-# Lagent - Linux System Debugger Agent
+# Lagent - Linux System Debugger (MCP Server)
 
-Lagent is an AI-powered system debugging agent designed specifically for **Linux** environments. It uses the Model Context Protocol (MCP) to provide a suite of tools for inspecting system health, logs, network status, and processes.
+Lagent is a high-performance **Model Context Protocol (MCP)** server designed for **Linux** environments. It provides a suite of tools for inspecting system health, logs, network status, and processes over HTTP (SSE).
 
 ## Features
 
-- **Linux-Only Support**: Optimized for Linux systems, utilizing native tools like `journalctl`, `ip`, `systemctl`, `df`, and `psutil`.
-- **HTTP/SSE Transport**: The MCP server and Agent API communicate over HTTP using Server-Sent Events (SSE).
-- **FastAPI & Uvicorn**: Built on modern, high-performance Python web frameworks.
-- **AI-Powered Diagnosis**: Integrates with LLMs (via OpenRouter) to analyze tool outputs and provide actionable system diagnoses.
-
-## Architecture
-
-1.  **MCP Server**: Hosts the system debugging tools (read files, list directories, check services, etc.) over an SSE endpoint.
-2.  **Agent API**: A FastAPI server that orchestrates the LLM and the MCP tools to solve natural language debug requests.
+- **Linux-Only**: Optimized for Linux systems using native tools (`journalctl`, `ip`, `systemctl`, `df`, `psutil`).
+- **MCP HTTP/SSE**: Implements the latest MCP standard over HTTP (Server-Sent Events).
+- **FastMCP**: Built with the `fastmcp` framework for high performance and low latency.
+- **Docker Ready**: Fully containerized for easy deployment.
 
 ## Prerequisites
 
 - Python 3.10+
-- A Linux environment (Ubuntu, Debian, CentOS, etc.)
-- `psutil` and `fastmcp` libraries.
+- A Linux environment (required for system-level tools).
+- Docker & Docker Compose (optional).
 
-## Setup
+## Setup & Deployment
 
-1.  **Clone the repository**:
-    ```bash
-    git clone <repository-url>
-    cd lagent
-    ```
-
-2.  **Install dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3.  **Configure Environment**:
-    Create a `.env` file based on `.env.example`:
-    ```bash
-    OPENROUTER_API_KEY=your_api_key_here
-    OPENROUTER_MODEL=openai/gpt-4o-mini
-    MCP_HOST=0.0.0.0
-    MCP_PORT=9000
-    ```
-
-## Running the Project
-
-### 1. Start the MCP Server
-In one terminal, start the MCP server using SSE transport:
-```bash
-python main.py mcp
-```
-By default, this runs on `http://0.0.0.0:9001`.
-
-### 3. Start with Docker (Recommended)
-You can run both the MCP server and the Agent API using Docker Compose:
+### 1. Run with Docker Compose (Recommended)
 ```bash
 docker-compose up --build
 ```
-This will start:
-- **Agent API**: `http://localhost:9000`
-- **MCP Server**: `http://localhost:9001`
+The MCP server will be accessible at: `http://localhost:9001/sse`
 
-Note: When running in Docker, the agent will inspect the **container's** environment, not the host's, unless you mount host volumes (e.g., `-v /:/host:ro`).
-
-## API Usage
-
-### Agent Endpoint
-**POST** `/agent`
-```json
-{
-  "prompt": "Check if the nginx service is running and show me the last 5 lines of the syslog."
-}
+### 2. Run Locally
+**Install dependencies:**
+```bash
+pip install -r requirements.txt
 ```
 
-### Health Check
-**GET** `/health`
+**Start the server:**
+```bash
+python main.py
+```
+By default, this runs on `http://0.0.0.0:9001`.
 
-### List Tools
-**GET** `/tools`
+## How to use with MCP Clients
 
-## Tools Available
+Connect your MCP client (like Claude Desktop) to the SSE endpoint:
+- **URL**: `http://localhost:9001/sse`
+
+## Tools Provided
 - `read_file`: Read content of a file.
 - `list_directory`: List files in a directory.
 - `disk_usage`: Check disk space.
@@ -90,3 +52,8 @@ Note: When running in Docker, the agent will inspect the **container's** environ
 - `check_service`: Check status of a `systemd` service.
 - `uptime`: Show system boot time and uptime.
 - `grep_log`: Search for patterns in log files.
+
+## Development
+
+- `main.py`: Entry point that launches the FastMCP server.
+- `tools.py`: Contains the tool registrations and system logic.

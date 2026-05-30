@@ -120,16 +120,7 @@ def register_tools(mcp: FastMCP) -> None:
         return f"Error: {path} not found."
 
 
-
 def make_mcp_server() -> FastMCP:
     mcp = FastMCP("system-debugger")
     register_tools(mcp)
     return mcp
-
-
-if __name__ == "__main__":
-    import uvicorn
-    mcp = make_mcp_server()
-    # FastMCP.run(transport="sse") sets up a FastAPI app internally
-    # We can run it directly or use uvicorn if we want more control.
-    mcp.run(transport="sse", host="0.0.0.0", port=9001)
