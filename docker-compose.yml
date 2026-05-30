@@ -1,0 +1,23 @@
+services:
+  mcp-server:
+    build: .
+    command: python main.py mcp
+    ports:
+      - "9001:9001"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  agent-api:
+    build: .
+    command: python main.py
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_PORT=9000
+    depends_on:
+      - mcp-server
+    restart: unless-stopped

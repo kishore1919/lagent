@@ -1,13 +1,12 @@
 import sys
-import os
-import subprocess
 
 if __name__ == "__main__":
-    mode = sys.argv[1] if len(sys.argv) > 1 else "http"
-    if mode == "mcp":
-        here = os.path.dirname(os.path.abspath(__file__))
-        mcp_path = os.path.join(here, "mcp_server.py")
-        os.execv(sys.executable, [sys.executable, mcp_path])
+    if len(sys.argv) > 1 and sys.argv[1] == "mcp":
+        from mcp_server import make_mcp_server
+
+        # Run MCP server on a different port or allow config
+        make_mcp_server().run(transport="sse", host="0.0.0.0", port=9001)
     else:
         from http_server import main
+
         main()

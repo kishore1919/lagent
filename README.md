@@ -1,101 +1,92 @@
-# lagent
+# Lagent - Linux System Debugger Agent
 
-Python Fast MCP + HTTP server for debugging Linux systems, powered by **FastMCP** and **OpenRouter** (via LangChain-compatible tool calling).
+Lagent is an AI-powered system debugging agent designed specifically for **Linux** environments. It uses the Model Context Protocol (MCP) to provide a suite of tools for inspecting system health, logs, network status, and processes.
+
+## Features
+
+- **Linux-Only Support**: Optimized for Linux systems, utilizing native tools like `journalctl`, `ip`, `systemctl`, `df`, and `psutil`.
+- **HTTP/SSE Transport**: The MCP server and Agent API communicate over HTTP using Server-Sent Events (SSE).
+- **FastAPI & Uvicorn**: Built on modern, high-performance Python web frameworks.
+- **AI-Powered Diagnosis**: Integrates with LLMs (via OpenRouter) to analyze tool outputs and provide actionable system diagnoses.
 
 ## Architecture
 
-```
-mcp_server.py     — stdio MCP server with 11 Linux debug tools
-http_server.py    — FastAPI HTTP server that:
-                     • mounts the MCP app (default at /mcp)
-                     • exposes /tools   → JSON tool list for LLM clients
-                     • exposes /health  → liveness/readiness check
-                     • exposes /agent   → natural-language → LLM + tool execution
-                     • exposes /invoke  → same as /agent
-main.py           — single entry point (http by default):
-                     python main.py          → HTTP server
-                     python main.py mcp      → stdio MCP server
-```
+1.  **MCP Server**: Hosts the system debugging tools (read files, list directories, check services, etc.) over an SSE endpoint.
+2.  **Agent API**: A FastAPI server that orchestrates the LLM and the MCP tools to solve natural language debug requests.
 
 ## Prerequisites
 
-- Python 3.11+
-- `uv` or `pip`
-- OpenRouter API key
+- Python 3.10+
+- A Linux environment (Ubuntu, Debian, CentOS, etc.)
+- `psutil` and `fastmcp` libraries.
 
 ## Setup
 
+1.  **Clone the repository**:
+    ```bash
+    git clone <repository-url>
+    cd lagent
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3.  **Configure Environment**:
+    Create a `.env` file based on `.env.example`:
+    ```bash
+    OPENROUTER_API_KEY=your_api_key_here
+    OPENROUTER_MODEL=openai/gpt-4o-mini
+    MCP_HOST=0.0.0.0
+    MCP_PORT=9000
+    ```
+
+## Running the Project
+
+### 1. Start the MCP Server
+In one terminal, start the MCP server using SSE transport:
 ```bash
-# install dependencies
-uv pip install -r requirements.txt
-
-# configure env
-cp .env.example .env
-# edit .env and set OPENROUTER_API_KEY
+python main.py mcp
 ```
+By default, this runs on `http://0.0.0.0:9001`.
 
-Minimal `.env`:
-```env
-OPENROUTER_API_KEY=sk-or-...
-OPENROUTER_MODEL=openai/gpt-4o-mini   # or any OpenRouter model with tool-use support
-MCP_HOST=0.0.0.0
-MCP_PORT=9000
-MCP_BASE_URL=http://localhost:9000
-```
-
-## Run
-
+### 3. Start with Docker (Recommended)
+You can run both the MCP server and the Agent API using Docker Compose:
 ```bash
-# HTTP server (exposes MCP + agent endpoint)
-python main.py
-# or:
-uvicorn http_server:app --host 0.0.0.0 --port 9000
+docker-compose up --build
+```
+This will start:
+- **Agent API**: `http://localhost:9000`
+- **MCP Server**: `http://localhost:9001`
 
-# stdio MCP server (for direct MCP clients)
-python mcp_server.py
+Note: When running in Docker, the agent will inspect the **container's** environment, not the host's, unless you mount host volumes (e.g., `-v /:/host:ro`).
+
+## API Usage
+
+### Agent Endpoint
+**POST** `/agent`
+```json
+{
+  "prompt": "Check if the nginx service is running and show me the last 5 lines of the syslog."
+}
 ```
 
-## HTTP Endpoints
+### Health Check
+**GET** `/health`
 
-| Method | Path       | Description                                         |
-|--------|------------|-----------------------------------------------------|
-| GET    | /health    | Service health + tools count                        |
-| GET    | /tools     | JSON list of tools (OpenAI function schema)         |
-| POST   | /agent     | Natural-language prompt → LLM diagnosis via tools  |
-| POST   | /invoke    | Alias for /agent                                    |
+### List Tools
+**GET** `/tools`
 
-### Example: list tools
-
-```bash
-curl http://localhost:9000/tools
-```
-
-### Example: debug via agent
-
-```bash
-curl -X POST http://localhost:9000/agent \
-  -H "Content-Type: application/json" \
-  -d "{\"prompt\": \"Check my system memory usage and list top 5 memory-hungry processes.\"}"
-```
-
-## Linux Debug Tools (MCP)
-
-| Tool            | Description                                       |
-|-----------------|---------------------------------------------------|
-| `read_file`     | Read file contents                                |
-| `list_directory`| ls -la on a path                                  |
-| `disk_usage`    | df -h                                             |
-| `memory_info`   | Virtual memory + swap stats via psutil            |
-| `cpu_info`      | CPU count, usage %, load averages                 |
-| `running_processes` | Top processes by CPU %                          |
-| `system_logs`   | journalctl or /var/log/syslog tail                |
-| `network_info`  | ip/ifconfig output                                 |
-| `check_service` | systemctl status of a unit                        |
-| `uptime`        | System uptime + boot time                         |
-| `grep_log`      | grep a log file for a pattern                     |
-
-## Notes
-
-- The MCP HTTP endpoint is mounted at `/mcp` (Streamable HTTP transport via FastMCP).
-- Tool execution inside the agent creates a fresh `make_stdio_mcp()` per request so the tool state stays isolated and thread-safe.
-- Requires a real Linux environment for system tools to return meaningful output. On Windows, most system tools will return "command not found" errors.
+## Tools Available
+- `read_file`: Read content of a file.
+- `list_directory`: List files in a directory.
+- `disk_usage`: Check disk space.
+- `memory_info`: Check RAM and swap usage.
+- `cpu_info`: Check CPU load and usage.
+- `running_processes`: List top processes by CPU usage.
+- `system_logs`: Retrieve system logs via `journalctl` or `tail`.
+- `network_info`: Get IP and interface status.
+- `check_service`: Check status of a `systemd` service.
+- `uptime`: Show system boot time and uptime.
+- `grep_log`: Search for patterns in log files.
