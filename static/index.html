@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lagent — Linux Debugger Console</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i data-lucide="terminal" class="glow-icon"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>LAGENT</h1>
+                    <span>LINUX DEBUGGER CONSOLE</span>
+                </div>
+            </div>
+            
+            <div class="system-meta">
+                <div class="status-indicator" id="api-status">
+                    <span class="status-dot orange pulse"></span>
+                    <span class="status-text">CONNECTING...</span>
+                </div>
+                <div class="divider"></div>
+                <div class="control-actions">
+                    <button class="icon-btn" id="btn-theme" title="Toggle Theme">
+                        <i data-lucide="sun"></i>
+                    </button>
+                    <button class="icon-btn" id="btn-clear" title="Clear Chat History">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                    <button class="icon-btn active" id="btn-sound" title="Toggle Sound FX">
+                        <i data-lucide="volume-2"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body Grid -->
+        <main class="app-grid">
+            
+            <!-- Left Panel: System Stats & Processes -->
+            <section class="panel panel-left" id="panel-stats">
+                <div class="panel-header">
+                    <i data-lucide="activity" class="panel-icon"></i>
+                    <h2>System Telemetry</h2>
+                    <span class="live-tag">LIVE</span>
+                </div>
+                
+                <div class="panel-body">
+                    <!-- Circular Gauges Grid -->
+                    <div class="gauges-container">
+                        <!-- CPU Usage Gauge -->
+                        <div class="gauge-card">
+                            <div class="circular-progress" id="cpu-progress" data-value="0">
+                                <svg class="progress-ring" width="80" height="80">
+                                    <circle class="progress-ring-bg" cx="40" cy="40" r="34"></circle>
+                                    <circle class="progress-ring-bar" id="cpu-ring" cx="40" cy="40" r="34"></circle>
+                                </svg>
+                                <div class="gauge-value" id="cpu-val">0%</div>
+                            </div>
+                            <span class="gauge-label">CPU</span>
+                        </div>
+                        
+                        <!-- RAM Usage Gauge -->
+                        <div class="gauge-card">
+                            <div class="circular-progress" id="ram-progress" data-value="0">
+                                <svg class="progress-ring" width="80" height="80">
+                                    <circle class="progress-ring-bg" cx="40" cy="40" r="34"></circle>
+                                    <circle class="progress-ring-bar" id="ram-ring" cx="40" cy="40" r="34"></circle>
+                                </svg>
+                                <div class="gauge-value" id="ram-val">0%</div>
+                            </div>
+                            <span class="gauge-label">MEM</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar Metrics -->
+                    <div class="metrics-list">
+                        <div class="metric-item">
+                            <div class="metric-info">
+                                <span>Memory Allocation</span>
+                                <span id="mem-detail">0 GB / 0 GB</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="mem-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-info">
+                                <span>Swap Memory</span>
+                                <span id="swap-detail">0 GB / 0 GB</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="swap-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-info">
+                                <span>Disk Space (Root)</span>
+                                <span id="disk-detail">0% Used</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="disk-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Uptime Card -->
+                    <div class="uptime-widget">
+                        <i data-lucide="clock" class="widget-icon text-cyan"></i>
+                        <div class="widget-content">
+                            <span class="widget-label">SYSTEM UPTIME</span>
+                            <span class="widget-value" id="uptime-value">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Running Processes (Top CPU) -->
+                    <div class="processes-section">
+                        <div class="section-title">
+                            <h3>Active Processes</h3>
+                            <span class="sub-label">Sorted by CPU %</span>
+                        </div>
+                        <div class="process-table-container">
+                            <table class="process-table">
+                                <thead>
+                                    <tr>
+                                        <th>PID</th>
+                                        <th>NAME</th>
+                                        <th class="text-right">CPU%</th>
+                                        <th class="text-right">MEM%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="process-list">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            <div class="spinner-small"></div> Reading process list...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Center Panel: Chat & Agent Execution Terminal -->
+            <section class="panel panel-center" id="panel-console">
+                <div class="panel-header flex-between">
+                    <div class="flex-align">
+                        <i data-lucide="messages-square" class="panel-icon text-cyan"></i>
+                        <h2>AI Debug Assistant</h2>
+                    </div>
+                    <div class="agent-mode-badge" id="execution-mode">
+                        AGENT ONLINE
+                    </div>
+                </div>
+                
+                <!-- Chat & Terminal Container -->
+                <div class="console-body">
+                    
+                    <!-- Welcome Display -->
+                    <div class="welcome-container" id="welcome-screen">
+                        <div class="welcome-icon">
+                            <i data-lucide="shield-alert" class="alert-icon"></i>
+                        </div>
+                        <h2>Lagent Intelligence Console</h2>
+                        <p>Ask natural language questions to inspect your Linux server. The agent uses autonomous tools to inspect, diagnose, and suggest mitigations.</p>
+                        
+                        <div class="suggestion-grid">
+                            <button class="suggest-btn" data-prompt="Diagnose system health and memory usage. Are we swapping?">
+                                <i data-lucide="cpu"></i>
+                                <div>
+                                    <h4>Analyze RAM Health</h4>
+                                    <p>Checks physical & swap usage</p>
+                                </div>
+                            </button>
+                            
+                            <button class="suggest-btn" data-prompt="Find the top 5 running processes using the most CPU and explain what they are.">
+                                <i data-lucide="bar-chart-3"></i>
+                                <div>
+                                    <h4>List Top Resource Hogs</h4>
+                                    <p>Find process spikes & details</p>
+                                </div>
+                            </button>
+                            
+                            <button class="suggest-btn" data-prompt="Check the overall disk usage and tell me if any mount is getting full.">
+                                <i data-lucide="database"></i>
+                                <div>
+                                    <h4>Disk Storage Check</h4>
+                                    <p>Audits mount points & size</p>
+                                </div>
+                            </button>
+                            
+                            <button class="suggest-btn" data-prompt="Check the system uptime and inspect network interface configurations.">
+                                <i data-lucide="network"></i>
+                                <div>
+                                    <h4>Network & Uptime Audit</h4>
+                                    <p>Inspects interfaces & IPs</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Threads -->
+                    <div class="chat-thread" id="chat-thread" style="display: none;">
+                        <!-- Messages appended here dynamically -->
+                    </div>
+
+                    <!-- Execution / Thinking Terminal -->
+                    <div class="agent-terminal" id="terminal-view" style="display: none;">
+                        <div class="terminal-header">
+                            <div class="term-dots">
+                                <span class="term-dot red"></span>
+                                <span class="term-dot yellow"></span>
+                                <span class="term-dot green"></span>
+                            </div>
+                            <div class="terminal-title">AGENT EXECUTION TRACE</div>
+                        </div>
+                        <div class="terminal-lines" id="terminal-lines">
+                            <!-- Live execution lines appended here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Footer / Prompt Input -->
+                <div class="panel-footer">
+                    <form id="chat-form" class="chat-input-wrapper">
+                        <textarea id="prompt-input" placeholder="Ask Lagent to inspect, find or diagnose..." rows="1" required></textarea>
+                        
+                        <div class="input-actions">
+                            <div class="llm-indicator text-muted" id="selected-model-tag">
+                                Model: openai/gpt-4o-mini
+                            </div>
+                            <button type="submit" class="send-btn" id="btn-submit">
+                                <span>EXECUTE</span>
+                                <i data-lucide="play" class="btn-icon"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Right Panel: Tools and Configurations -->
+            <section class="panel panel-right" id="panel-tools">
+                <div class="panel-header">
+                    <i data-lucide="sliders" class="panel-icon"></i>
+                    <h2>Agent Parameters</h2>
+                </div>
+
+                <div class="panel-body flex-col gap-6">
+                    <!-- Config Section -->
+                    <div class="config-card">
+                        <h3>LLM Diagnostics Settings</h3>
+                        
+                        <!-- Model Selection -->
+                        <div class="form-group">
+                            <label for="model-select">Active Model Inference</label>
+                            <div class="select-wrapper">
+                                <select id="model-select">
+                                    <option value="openai/gpt-4o-mini" selected>gpt-4o-mini (Fast & Efficient)</option>
+                                    <option value="google/gemini-2.5-flash">gemini-2.5-flash (Smart & Quick)</option>
+                                    <option value="anthropic/claude-3-haiku">claude-3-haiku (Precise & Concise)</option>
+                                    <option value="deepseek/deepseek-chat">deepseek-chat (Cost-effective)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Max Rounds Selection -->
+                        <div class="form-group">
+                            <div class="flex-between">
+                                <label for="rounds-slider">Max Tool Execution Rounds</label>
+                                <span class="badge" id="rounds-value">3</span>
+                            </div>
+                            <input type="range" id="rounds-slider" min="1" max="5" value="3" class="slider">
+                            <span class="range-subtext">Maximum loops of tool-call & evaluation the agent can perform.</span>
+                        </div>
+                    </div>
+
+                    <!-- Tools Section -->
+                    <div class="config-card flex-1 flex-col overflow-hidden">
+                        <div class="flex-between align-center mb-2">
+                            <h3>MCP Tools Inventory</h3>
+                            <span class="count-badge" id="tools-count">0</span>
+                        </div>
+                        <p class="section-desc">FastMCP tools registered directly to this backend environment.</p>
+                        
+                        <!-- Tools Accordion Container -->
+                        <div class="tools-accordion overflow-y" id="tools-list">
+                            <div class="text-center text-muted py-6">
+                                <div class="spinner-small"></div> Initializing tools...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for API Setup / Demo Alert -->
+    <div class="modal-overlay" id="setup-modal" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <i data-lucide="key" class="text-orange modal-icon"></i>
+                <h2>OpenRouter Key Required</h2>
+            </div>
+            <div class="modal-body">
+                <p>Welcome! Lagent utilizes <strong>OpenRouter</strong> to run advanced LLM reasoning and coordinate terminal-level tools.</p>
+                <div class="alert-box warning">
+                    <strong>Notice:</strong> Your <code>.env</code> file is missing or doesn't have <code>OPENROUTER_API_KEY</code> set.
+                </div>
+                <p>To run the agent in fully autonomous mode, please create a <code>.env</code> file in your project directory with your API key:</p>
+                <pre class="code-block"><code>OPENROUTER_API_KEY=your_key_here
+OPENROUTER_MODEL=openai/gpt-4o-mini
+MCP_PORT=9000</code></pre>
+                <p>Alternatively, you can test-drive Lagent in <strong>Demo / Simulation Mode</strong> where we simulate agent thought-loops and system checks!</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-enter-demo">Run Demo Mode</button>
+                <button class="btn btn-primary" id="btn-reload-config">I configured it, reload!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound Effects Preload -->
+    <audio id="snd-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav" preload="auto"></audio>
+    <audio id="snd-terminal" src="https://assets.mixkit.co/active_storage/sfx/2042/2042-84.wav" preload="auto"></audio>
+    <audio id="snd-success" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav" preload="auto"></audio>
+    <audio id="snd-error" src="https://assets.mixkit.co/active_storage/sfx/2573/2573-84.wav" preload="auto"></audio>
+
+    <!-- App Logic -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
