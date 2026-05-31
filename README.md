@@ -1,13 +1,13 @@
 # Lagent - Linux System Debugger (MCP Server)
 
-Lagent is a high-performance **Model Context Protocol (MCP)** server designed for **Linux** environments. It provides a suite of tools for inspecting system health, logs, network status, and processes over HTTP (SSE).
+Lagent is a high-performance **Model Context Protocol (MCP)** server named `system-debugger`, designed for **Linux** environments. It provides 11 tools for inspecting system health, logs, network status, and processes over HTTP (SSE).
 
 ## Features
 
 - **Linux-Only**: Optimized for Linux systems using native tools (`journalctl`, `ip`, `systemctl`, `df`, `psutil`).
 - **MCP HTTP/SSE**: Implements the latest MCP standard over HTTP (Server-Sent Events).
 - **FastMCP**: Built with the `fastmcp` framework for high performance and low latency.
-- **Docker Ready**: Fully containerized for easy deployment.
+- **Docker Ready**: Multi-stage Docker build for a minimal footprint.
 
 ## Prerequisites
 
@@ -45,19 +45,48 @@ Connect your MCP client (like Claude Desktop) to the SSE endpoint:
 - **URL**: `http://localhost:9001/sse`
 
 ## Tools Provided
-- `read_file`: Read content of a file.
-- `list_directory`: List files in a directory.
-- `disk_usage`: Check disk space.
-- `memory_info`: Check RAM and swap usage.
-- `cpu_info`: Check CPU load and usage.
-- `running_processes`: List top processes by CPU usage.
-- `system_logs`: Retrieve system logs via `journalctl` or `tail`.
-- `network_info`: Get IP and interface status.
-- `check_service`: Check status of a `systemd` service.
-- `uptime`: Show system boot time and uptime.
-- `grep_log`: Search for patterns in log files.
+
+### File & Directory
+- `read_file(path)` — Read the contents of a file.
+- `list_directory(path=".")` — List files and directories at a given path.
+
+### System Health
+- `disk_usage()` — Check disk space usage across all mounted filesystems.
+- `memory_info()` — Get detailed RAM and swap usage statistics.
+- `cpu_info()` — Get CPU count, usage percentage, and load average.
+- `uptime()` — Show system boot time and uptime duration.
+
+### Processes & Logs
+- `running_processes(limit=20)` — List top processes sorted by CPU usage.
+- `system_logs(lines=50)` — Retrieve recent system logs via `journalctl` (preferred) or `tail`.
+- `grep_log(pattern, path="/var/log/syslog", lines=20)` — Search for a pattern in log files (case-insensitive).
+
+### Network & Services
+- `network_info()` — Display network interfaces and IP addresses via `ip` or `ifconfig`.
+- `check_service(service)` — Check the status of a `systemd` service.
+
+## Environment Variables
+
+| Variable   | Default   | Description               |
+|------------|-----------|---------------------------|
+| `MCP_HOST` | `0.0.0.0` | Host interface to bind to |
+| `MCP_PORT` | `9001`    | Port to listen on         |
+
+Create a `.env` file based on `.env.example` to customize these settings.
 
 ## Development
 
-- `server.py`: Entry point that exposes the FastMCP server as an ASGI application.
-- `tools.py`: Contains the tool registrations and system logic.
+| File       | Purpose                                                        |
+|------------|----------------------------------------------------------------|
+| `server.py` | Entry point — creates the FastMCP server and exposes the ASGI app |
+| `tools.py`  | Tool registrations and all system-level logic                  |
+
+## Dependencies
+
+- **fastmcp** (≥2.0.0) — MCP server framework
+- **fastapi** (≥0.111.0) — ASGI web framework
+- **uvicorn** (≥0.30.0) — ASGI server
+- **psutil** (≥5.9.0) — System and process utilities
+- **python-dotenv** (≥1.0.0) — `.env` file support
+- **pydantic-settings** (≥2.6.0) — Settings management
+- **requests** (≥2.32.0) — HTTP client (used by MCP transport)
