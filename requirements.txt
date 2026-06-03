@@ -5,3 +5,5 @@ python-dotenv>=1.0.0
 pydantic-settings>=2.6.0
 requests>=2.32.0
 psutil>=5.9.0
+gradio>=4.0.0
+mcp>=1.0.0

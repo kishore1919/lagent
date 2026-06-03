@@ -14,15 +14,15 @@ def main() -> None:
     """Start the MCP server using Uvicorn.
 
     Reads ``MCP_HOST`` and ``MCP_PORT`` from the environment (defaults to
-    ``0.0.0.0:9001``) and runs the FastMCP HTTP/SSE application.
+    ``0.0.0.0:9001``) and runs the FastMCP streamable HTTP application.
     """
     host = os.getenv("MCP_HOST", "0.0.0.0")
     port = int(os.getenv("MCP_PORT", "9001"))
 
     print(f"Starting MCP Server on http://{host}:{port}")
-    print("Transport: HTTP/SSE (ASGI)")
+    print("Transport: streamable HTTP (ASGI)")
 
-    # Uvicorn is the ASGI server that serves the FastMCP SSE endpoint.
+    # Uvicorn is the ASGI server that serves the FastMCP /mcp endpoint.
     uvicorn.run("server:app", host=host, port=port, log_level="info", reload=False)
 
 
